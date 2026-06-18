@@ -110,7 +110,7 @@ jobs:
           ignore-unfixed: true
 
   # ----------------------------------------------------------
-  # 5) Deploy simulado
+  # 5) Deploy simulado + push imagen GHCR
   # ----------------------------------------------------------
   deploy:
     needs: build-y-scan
@@ -125,8 +125,8 @@ jobs:
       - name: Build & push de la imagen
         run: |
           INICIO=$(date +%s)
-          docker build -t ghcr.io/${{ github.repository_owner }}/microservicio-ep3:latest .
-          docker push ghcr.io/${{ github.repository_owner }}/microservicio-ep3:latest
+          docker build -t ghcr.io/louima-jeff/microservicio-ep3:latest .
+          docker push ghcr.io/louima-jeff/microservicio-ep3:latest
           FIN=$(date +%s)
           echo "DEPLOY_DURATION=$((FIN-INICIO))" >> $GITHUB_ENV
 
