@@ -1,13 +1,5 @@
 # ============================================================
 # Pipeline CI/CD - EP3 DevOps (Observabilidad y cumplimiento)
-# ------------------------------------------------------------
-# Cubre:
-#   - Tests + cobertura          -> alimenta el dashboard (IE3)
-#   - SonarCloud Quality Gate    -> cumplimiento normativo (IE5)
-#   - Trivy (escaneo seguridad)  -> DETIENE el pipeline si hay CVE critico (IE6)
-#   - Snyk (dependencias)        -> cumplimiento (IE5)
-#   - Build & push de imagen     -> despliegue (IE2)
-#   - Push de metricas (deploy/cobertura) a Prometheus Pushgateway (IE3)
 # ============================================================
 name: CI-CD EP3
 
@@ -17,16 +9,20 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   # ----------------------------------------------------------
-  # 1) Pruebas + cobertura (IE3)
+  # 1) Pruebas + cobertura
   # ----------------------------------------------------------
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Sonar necesita el historial completo
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -45,8 +41,7 @@ jobs:
           path: coverage.xml
 
   # ----------------------------------------------------------
-  # 2) Cumplimiento de calidad: SonarCloud Quality Gate (IE5 + IE6)
-  #    Si el Quality Gate falla, el job falla y se detiene el pipeline.
+  # 2) Calidad SonarCloud
   # ----------------------------------------------------------
   calidad:
     needs: test
@@ -70,31 +65,31 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # IE6: espera el resultado del Quality Gate. Si NO pasa, falla el build.
-      - name: Verificar Quality Gate (rompe el build si falla)
+      - name: Verificar Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ----------------------------------------------------------
-  # 3) Seguridad: escaneo de dependencias (Snyk) - IE5
+  # 3) Seguridad dependencias Snyk
   # ----------------------------------------------------------
   seguridad-dependencias:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Snyk - escaneo de dependencias
         uses: snyk/actions/python@master
-        continue-on-error: false   # IE6: si hay vuln. alta, detiene el pipeline
+        continue-on-error: false
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=critical
 
   # ----------------------------------------------------------
-  # 4) Build de imagen + escaneo Trivy que DETIENE el pipeline (IE6)
+  # 4) Build Docker + Trivy
   # ----------------------------------------------------------
   build-y-scan:
     needs: [calidad, seguridad-dependencias]
@@ -105,7 +100,7 @@ jobs:
       - name: Build de la imagen Docker
         run: docker build -t microservicio-ep3:${{ github.sha }} .
 
-      -       - name: Escaneo de seguridad de la imagen Trivy
+      - name: Escaneo de seguridad de la imagen Trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: microservicio-ep3:${{ github.sha }}
@@ -115,8 +110,7 @@ jobs:
           ignore-unfixed: true
 
   # ----------------------------------------------------------
-  # 5) Despliegue simulado + push de metricas de pipeline (IE2 + IE3)
-  #    Solo corre en main y si TODO lo anterior paso.
+  # 5) Deploy simulado
   # ----------------------------------------------------------
   deploy:
     needs: build-y-scan
@@ -136,12 +130,11 @@ jobs:
           FIN=$(date +%s)
           echo "DEPLOY_DURATION=$((FIN-INICIO))" >> $GITHUB_ENV
 
-      - name: Desplegar en Kubernetes (entorno simulado)
+      - name: Desplegar en Kubernetes simulado
         run: |
-          echo "kubectl apply -f k8s/   # se ejecuta contra el cluster configurado"
+          echo "kubectl apply -f k8s/"
           # kubectl apply -f k8s/
 
-      # IE3: empuja tiempo de despliegue y cobertura a Prometheus para el dashboard
       - name: Publicar metricas de pipeline a Pushgateway
         run: |
           echo "deploy_duration_seconds ${DEPLOY_DURATION}" | \
