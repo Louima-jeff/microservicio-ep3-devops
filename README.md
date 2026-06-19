@@ -113,3 +113,35 @@ Tres mecanismos independientes detienen el pipeline ante una falla crítica:
 
 Ver sección correspondiente en `INFORME.md`. Todo uso de IA se declara y cita según
 la pauta del curso (https://bibliotecas.duoc.cl/ia).
+## Acceso y credenciales para revisión
+
+**Repositorio GitHub:**  
+https://github.com/Louima-jeff/microservicio-ep3-devops
+
+**Rama utilizada:**  
+main
+
+**Integrantes:**  
+- Gefmy Louima
+- Jean Odens Anderson
+
+**Forma de ejecución del ambiente:**  
+Docker Compose en ambiente local.
+
+**Credenciales Grafana:**  
+- Usuario: admin
+- Contraseña: admin
+
+**SonarCloud:**  
+https://sonarcloud.io/project/overview?id=Louima-jeff_microservicio-ep3-devops
+
+**Snyk:**  
+Proyecto configurado con GitHub Actions mediante `SNYK_TOKEN`. Evidencia incluida en `README.md`, `INFORME.md` y capturas del pipeline.
+
+**Observación:**  
+La entrega se documenta con evidencias en `README.md` e `INFORME.md`. El ambiente se ejecuta con Docker Compose, de acuerdo con la indicación del docente que descarta Kubernetes para esta evaluación. El pipeline CI/CD finalizó correctamente con todos los jobs en verde: `test`, `calidad`, `seguridad-dependencias`, `build-y-scan` y `deploy`.
+
+**Acceso para revisión:**  
+- GitHub: nicosingh
+- SonarCloud: nico@singh.cl
+- Snyk: nico@singh.cl
