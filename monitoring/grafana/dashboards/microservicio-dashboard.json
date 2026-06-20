@@ -6,7 +6,7 @@
   "tags": ["ep3", "devops", "observabilidad"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "10s",
   "time": { "from": "now-30m", "to": "now" },
   "templating": { "list": [] },
@@ -19,7 +19,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m]))",
+          "expr": "sum(rate(http_requests_total{job=\"microservicio-ep3\"}[1m]))",
           "legendFormat": "req/s"
         }
       ]
@@ -32,7 +32,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"microservicio-ep3\"}[5m])) by (le))",
           "legendFormat": "p95"
         }
       ]
@@ -45,11 +45,11 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{job=\"microservicio-ep3\", status=~\"5..\"}[5m])) or vector(0)",
           "legendFormat": "5xx/s"
         },
         {
-          "expr": "rate(errores_negocio_total[5m])",
+          "expr": "vector(0)",
           "legendFormat": "errores negocio/s"
         }
       ]
@@ -62,7 +62,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "rate(process_cpu_seconds_total[1m])",
+          "expr": "sum(rate(process_cpu_seconds_total{job=\"microservicio-ep3\"}[5m]))",
           "legendFormat": "CPU"
         }
       ]
@@ -76,26 +76,25 @@
       "fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
       "targets": [
         {
-          "expr": "process_resident_memory_bytes / 1024 / 1024",
+          "expr": "process_resident_memory_bytes{job=\"microservicio-ep3\"} / 1024 / 1024",
           "legendFormat": "RSS MB"
         }
       ]
     },
     {
       "id": 6,
-      "title": "Cobertura de pruebas (%)",
+      "title": "Estado del microservicio",
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "none",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "red", "value": null },
-              { "color": "yellow", "value": 60 },
-              { "color": "green", "value": 80 }
+              { "color": "green", "value": 1 }
             ]
           }
         },
@@ -103,35 +102,36 @@
       },
       "targets": [
         {
-          "expr": "test_coverage_percent",
-          "legendFormat": "cobertura"
+          "expr": "up{job=\"microservicio-ep3\"}",
+          "legendFormat": "activo"
         }
       ]
     },
     {
       "id": 7,
-      "title": "Tiempo de despliegue (seg)",
+      "title": "Solicitudes totales",
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
         {
-          "expr": "deploy_duration_seconds",
-          "legendFormat": "ultimo deploy"
+          "expr": "sum(http_requests_total{job=\"microservicio-ep3\"})",
+          "legendFormat": "solicitudes"
         }
       ]
     },
     {
       "id": 8,
-      "title": "Items creados (total)",
+      "title": "Estado de Prometheus",
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
       "targets": [
         {
-          "expr": "items_creados_total",
-          "legendFormat": "items"
+          "expr": "up{job=\"prometheus\"}",
+          "legendFormat": "prometheus"
         }
       ]
     }
