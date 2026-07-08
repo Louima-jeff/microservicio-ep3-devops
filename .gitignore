@@ -10,3 +10,6 @@ htmlcov/
 venv/
 grafana-data/
 prometheus-data/
+*.zip
+*.rar
+*.7z

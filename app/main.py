@@ -5,7 +5,7 @@ Extiende el microservicio de la EP2 incorporando:
   - Instrumentación Prometheus (métricas HTTP automáticas + endpoint /metrics)  -> IE1
   - Métricas de negocio personalizadas (errores, items creados)                 -> IE1 / IE3
   - Logging estructurado para observar el comportamiento en ejecución           -> IE1
-  - Endpoint /health para probes de Kubernetes (liveness/readiness)             -> IE2
+  - Endpoint /health para healthcheck en Docker Compose                         -> IE2
 
 NOTA: Reemplaza la lógica interna (modelo Item, endpoints) por la de tu
 microservicio real de la EP1. La instrumentación y el endpoint /metrics
@@ -64,7 +64,7 @@ def root():
 
 @app.get("/health", tags=["sistema"])
 def health():
-    """Healthcheck para probes de Docker y Kubernetes (IE2)."""
+    """Healthcheck para Docker Compose y monitoreo (IE2)."""
     return {"status": "healthy"}
 
 
