@@ -1,7 +1,7 @@
 # ============================================================
-# Pipeline CI/CD - EP3 DevOps (Observabilidad y cumplimiento)
+# Pipeline CI/CD - EFT DevOps (integracion final del semestre)
 # ============================================================
-name: CI-CD EP3
+name: CI-CD EFT
 
 on:
   push:
@@ -110,7 +110,7 @@ jobs:
           ignore-unfixed: true
 
   # ----------------------------------------------------------
-  # 5) Deploy simulado + push imagen GHCR
+  # 5) Deploy simulado con Docker Compose + push imagen GHCR
   # ----------------------------------------------------------
   deploy:
     needs: build-y-scan
@@ -130,12 +130,11 @@ jobs:
           FIN=$(date +%s)
           echo "DEPLOY_DURATION=$((FIN-INICIO))" >> $GITHUB_ENV
 
-      - name: Desplegar en Kubernetes simulado
+      - name: Validar despliegue simulado con Docker Compose
         run: |
-          echo "kubectl apply -f k8s/"
-          # kubectl apply -f k8s/
+          docker compose config
+          echo "Despliegue simulado validado con Docker Compose"
 
-      - name: Publicar metricas de pipeline a Pushgateway
+      - name: Registrar metrica de duracion del deploy
         run: |
-          echo "deploy_duration_seconds ${DEPLOY_DURATION}" | \
-            curl --data-binary @- http://PUSHGATEWAY:9091/metrics/job/ci_ep3 || true
+          echo "deploy_duration_seconds ${DEPLOY_DURATION}"
