@@ -1,205 +1,286 @@
-# Proyecto Final Transversal - Ingenieria DevOps DOY0101
+# Microservicio EP3 — Observabilidad y entornos reales en DevOps
 
-## 1. Resumen del proyecto
+Extensión del pipeline DevOps de la EP2, incorporando **observabilidad** mediante monitoreo, métricas, dashboard y validación de cumplimiento normativo dentro del ciclo CI/CD.
 
-Este repositorio corresponde a la Evaluacion Final Transversal de Ingenieria DevOps. El objetivo es demostrar el ciclo DevOps completo aplicado a un microservicio: control de versiones, ramas, pull requests, pipeline CI/CD, contenedores, pruebas, seguridad, despliegue simulado y monitoreo.
+> Asignatura: Ingeniería DevOps (DOY0101) · Evaluación Parcial N°3 (30%) · Trabajo en parejas
 
-El proyecto integra los aprendizajes de las tres evaluaciones parciales:
+---
 
-| Etapa | Trabajo realizado | Evidencia principal |
-| --- | --- | --- |
-| EP1 | Repositorio Git, ramas, commits, pull requests y convenciones | Historial Git, ramas, README |
-| EP2 | Docker, pruebas, GitHub Actions, seguridad y despliegue simulado | `Dockerfile`, `.github/workflows/ci-cd.yml`, `docker-compose.yml` |
-| EP3 | Observabilidad, metricas, logs y dashboard | Prometheus, Grafana, `/metrics`, dashboard |
+## 1. ¿Qué hace este proyecto?
 
-## 2. Microservicio trabajado
+| Componente                          | Herramienta                                                | Indicador |
+| ----------------------------------- | ---------------------------------------------------------- | --------- |
+| Monitoreo, logs y métricas          | **Prometheus** + instrumentación FastAPI                   | IE1       |
+| Despliegue en entorno simulado      | **Docker Compose local**                                   | IE2       |
+| Dashboard de métricas clave         | **Grafana**                                                | IE3       |
+| Documentación de integración        | Este README + `INFORME.md` + `docs/`                       | IE4       |
+| Cumplimiento y auditoría            | **SonarCloud** + **Snyk** + **Trivy** + `scripts/audit.sh` | IE5       |
+| Pipeline que se detiene ante fallas | Quality Gate + Snyk/Trivy con bloqueo                      | IE6       |
 
-La aplicacion es un microservicio construido con FastAPI. Incluye endpoints basicos para validar estado, crear items, listar items y exponer metricas para Prometheus.
+> Nota: De acuerdo con la indicación del docente, **Kubernetes fue descartado para esta evaluación**. Por lo tanto, el ambiente final se ejecuta mediante **Docker Compose en entorno local**.
 
-Endpoints principales:
+---
 
-| Endpoint | Funcion |
-| --- | --- |
-| `/` | Respuesta principal del servicio |
-| `/health` | Verifica que el microservicio este activo |
-| `/items` | Lista o crea items de prueba |
-| `/metrics` | Expone metricas para Prometheus |
+## 2. Estructura del repositorio
 
-## 3. Estrategia de ramas
-
-Para la entrega final se documenta una estrategia tipo GitFlow simplificado:
-
-- `main`: version estable y lista para evaluacion.
-- `develop`: integracion de cambios antes de pasar a `main`.
-- `feature/evidencias-eft`: rama recomendada para agregar evidencias, documentacion y ajustes finales.
-- `hotfix/...`: rama para correcciones urgentes.
-
-La idea es evitar cambios directos en `main`. Cada cambio importante debe pasar por una rama temporal, commit claro y pull request.
-
-Comandos sugeridos:
-
-```bash
-git checkout main
-git pull
-git checkout -b feature/evidencias-eft
-git add .
-git commit -m "docs: agrega documentacion final EFT"
-git push origin feature/evidencias-eft
+```text
+.
+├── app/                      # Microservicio FastAPI instrumentado con Prometheus
+│   ├── main.py               # Endpoints + /metrics + logging
+│   └── metrics.py            # Métricas de negocio personalizadas
+├── tests/                    # Pruebas automatizadas con pytest
+├── monitoring/
+│   ├── prometheus/           # Configuración de scrape + reglas de alerta
+│   └── grafana/              # Datasource + dashboard provisionado
+├── k8s/                      # Archivos referenciales no utilizados en la entrega final
+├── scripts/audit.sh          # Auditoría de cumplimiento local
+├── .github/
+│   ├── workflows/ci-cd.yml   # Pipeline CI/CD
+│   └── dependabot.yml        # Actualización de dependencias
+├── docs/                     # Documentación de arquitectura
+├── Dockerfile                # Imagen del microservicio
+├── docker-compose.yml        # Stack local: app + Prometheus + Grafana
+├── sonar-project.properties  # Configuración SonarCloud
+├── INFORME.md                # Informe de la evaluación
+└── README.md
 ```
 
-Luego se debe crear un Pull Request en GitHub desde `feature/evidencias-eft` hacia `main`.
+---
 
-## 4. Convenciones de commits
+## 3. Cómo levantar todo en local
 
-Se recomienda usar mensajes simples y claros:
-
-| Tipo | Uso |
-| --- | --- |
-| `feat:` | nueva funcionalidad |
-| `fix:` | correccion de error |
-| `docs:` | documentacion |
-| `test:` | pruebas |
-| `ci:` | pipeline o automatizacion |
-| `chore:` | ajustes menores |
-
-Ejemplos:
-
-```bash
-git commit -m "ci: ajusta pipeline final EFT"
-git commit -m "docs: agrega guia de presentacion"
-git commit -m "fix: corrige referencia de despliegue Docker Compose"
-```
-
-## 5. Pipeline CI/CD
-
-El pipeline se encuentra en `.github/workflows/ci-cd.yml` y se ejecuta con push a `main` o `develop`, y con pull request hacia `main`.
-
-Etapas del pipeline:
-
-1. Ejecuta pruebas con `pytest`.
-2. Genera cobertura de pruebas.
-3. Ejecuta analisis de calidad con SonarCloud.
-4. Ejecuta analisis de dependencias con Snyk.
-5. Construye imagen Docker.
-6. Escanea la imagen con Trivy.
-7. Valida el despliegue simulado con Docker Compose.
-
-Si una etapa falla, las etapas posteriores no continúan. Esto demuestra control de calidad dentro del flujo DevOps.
-
-## 6. Docker y despliegue simulado
-
-El proyecto usa Docker para ejecutar el microservicio en un contenedor. El stack completo se levanta con Docker Compose:
+Para ejecutar el ambiente completo se utiliza Docker Compose:
 
 ```bash
 docker compose up -d --build
 ```
 
-Servicios:
+Luego abre los siguientes servicios:
 
-| Servicio | Puerto | Funcion |
-| --- | --- | --- |
-| Microservicio | `8000` | API FastAPI |
-| Prometheus | `9090` | Recoleccion de metricas |
-| Grafana | `3000` | Dashboard de visualizacion |
+| Servicio      | URL                           | Notas                              |
+| ------------- | ----------------------------- | ---------------------------------- |
+| Microservicio | http://localhost:8000         | API principal                      |
+| Healthcheck   | http://localhost:8000/health  | Verifica estado del microservicio  |
+| Métricas      | http://localhost:8000/metrics | Métricas expuestas para Prometheus |
+| Prometheus    | http://localhost:9090         | Monitoreo y consulta de métricas   |
+| Grafana       | http://localhost:3000         | Usuario `admin` / clave `admin`    |
 
-Para detener:
+En Grafana el dashboard **"Microservicio EP3 - Observabilidad"** ya viene cargado automáticamente.
+
+Para generar tráfico y ver datos en Grafana:
 
 ```bash
-docker compose down
+curl http://localhost:8000/health
+curl http://localhost:8000/metrics
+curl -X POST http://localhost:8000/items -H "Content-Type: application/json" -d "{\"nombre\":\"Producto\",\"precio\":1990}"
+curl http://localhost:8000/items/999
 ```
 
-## 7. Seguridad y calidad
+---
 
-El proyecto considera controles automatizados:
+## 4. Observabilidad implementada
 
-- SonarCloud o SonarQube para calidad del codigo.
-- Snyk para revision de dependencias.
-- Trivy para revision de imagen Docker.
-- Dependabot para actualizacion de dependencias.
-- Secrets de GitHub para no escribir tokens en el codigo.
+El proyecto incorpora observabilidad usando:
 
-Secretos necesarios en GitHub Actions:
+* **Prometheus**, para recolectar métricas del endpoint `/metrics`.
+* **Grafana**, para visualizar métricas del microservicio.
+* **Métricas HTTP**, para revisar solicitudes, latencia, errores y estado del servicio.
+* **Métricas de proceso**, para revisar CPU y memoria.
+
+El dashboard de Grafana muestra:
+
+* Throughput de solicitudes.
+* Latencia p95.
+* Errores registrados 5xx y errores de negocio.
+* Uso de CPU del proceso.
+* Uso de memoria.
+* Estado del microservicio.
+* Solicitudes totales.
+* Estado de Prometheus.
+
+La conexión entre Grafana y Prometheus se configura automáticamente mediante:
+
+```text
+monitoring/grafana/provisioning/datasources/datasource.yml
+```
+
+El dashboard se provisiona desde:
+
+```text
+monitoring/grafana/dashboards/microservicio-dashboard.json
+```
+
+---
+
+## 5. Integración en el pipeline CI/CD
+
+El pipeline `.github/workflows/ci-cd.yml` ejecuta la siguiente secuencia. Cada etapa que falla detiene las siguientes:
+
+1. **test**
+   Ejecuta pruebas automatizadas con `pytest` y genera cobertura.
+
+2. **calidad**
+   Ejecuta análisis de calidad con SonarCloud y valida el Quality Gate.
+
+3. **seguridad-dependencias**
+   Ejecuta análisis de dependencias con Snyk. Si existen vulnerabilidades altas, el job puede fallar.
+
+4. **build-y-scan**
+   Construye la imagen Docker y ejecuta análisis de vulnerabilidades con Trivy.
+
+5. **deploy**
+   Solo si todo lo anterior pasó y estamos en `main`, se valida el despliegue simulado mediante **Docker Compose**. El ambiente local incluye el microservicio, Prometheus y Grafana, permitiendo evidenciar observabilidad sin utilizar Kubernetes.
+
+---
+
+## 6. Cómo esto apoya la toma de decisiones técnicas
+
+Las métricas y alertas permiten observar el comportamiento real del microservicio.
+
+* Prometheus permite revisar si el servicio está activo.
+* Grafana permite visualizar consumo de CPU, memoria, throughput, latencia y errores.
+* SonarCloud ayuda a revisar calidad de código.
+* Snyk y Trivy permiten detectar vulnerabilidades.
+* El pipeline CI/CD bloquea el avance cuando existen fallas relevantes.
+
+Esto permite tomar decisiones técnicas basadas en evidencia, por ejemplo:
+
+* Corregir errores antes de entregar.
+* Mejorar rendimiento.
+* Revisar consumo de recursos.
+* Detectar problemas de seguridad.
+* Evitar entregar código con fallas críticas.
+
+---
+
+## 7. Demostración de que el pipeline se detiene
+
+El pipeline puede detenerse por distintos mecanismos:
+
+1. **Quality Gate de SonarCloud**
+   Si el proyecto no cumple las reglas de calidad, el job de calidad falla.
+
+2. **Snyk**
+   Si se detectan vulnerabilidades relevantes en dependencias, se reporta el problema en el pipeline.
+
+3. **Trivy**
+   Si la imagen Docker contiene vulnerabilidades críticas o altas, el escaneo puede detener el flujo.
+
+4. **scripts/audit.sh**
+   Permite validar localmente aspectos de cumplimiento, configuración y seguridad.
+
+Estos mecanismos demuestran que el pipeline no solo automatiza tareas, sino que también actúa como control de calidad y seguridad.
+
+---
+
+## 8. Configuración previa
+
+Para ejecutar correctamente el pipeline se requieren secretos en GitHub:
 
 ```text
 SONAR_TOKEN
 SNYK_TOKEN
 ```
 
-## 8. Monitoreo y observabilidad
+Estos secretos se configuran en:
 
-El microservicio expone metricas en `/metrics`. Prometheus consulta esas metricas y Grafana las muestra en un dashboard.
-
-Metricas usadas para la presentacion:
-
-- disponibilidad del servicio;
-- cantidad de solicitudes;
-- latencia;
-- errores;
-- memoria;
-- CPU;
-- estado de Prometheus.
-
-Esto permite detectar problemas y tomar decisiones tecnicas con evidencia.
-
-## 9. Comandos de validacion
-
-Instalar dependencias:
-
-```bash
-pip install -r requirements.txt
+```text
+Settings → Secrets and variables → Actions
 ```
 
-Ejecutar pruebas:
+SonarCloud se configura mediante:
 
-```bash
-pytest --cov=app --cov-report=term
+```text
+sonar-project.properties
 ```
 
-Levantar ambiente:
+No se utiliza Kubernetes en esta entrega, según la indicación del docente. El ambiente se levanta con Docker Compose en entorno local.
+
+---
+
+## 9. Acceso y credenciales para revisión
+
+**Repositorio GitHub:**
+https://github.com/Louima-jeff/microservicio-ep3-devops
+
+**Rama utilizada:**
+main
+
+**Integrantes:**
+
+* Gefmy Louima
+* Jean Odens Anderson
+
+**Forma de ejecución del ambiente:**
+Docker Compose en ambiente local.
+
+**Comando de ejecución:**
 
 ```bash
 docker compose up -d --build
 ```
 
-Generar trafico de prueba:
+**Credenciales Grafana:**
 
-```bash
-curl http://localhost:8000/health
-curl http://localhost:8000/metrics
-curl -X POST http://localhost:8000/items -H "Content-Type: application/json" -d "{\"nombre\":\"Producto EFT\",\"precio\":1990}"
-curl http://localhost:8000/items/999
-```
+* Usuario: admin
+* Contraseña: admin
 
-Ver logs:
+**URLs locales:**
 
-```bash
-docker compose logs -f
-```
+| Servicio      | URL                           |
+| ------------- | ----------------------------- |
+| Microservicio | http://localhost:8000         |
+| Health        | http://localhost:8000/health  |
+| Metrics       | http://localhost:8000/metrics |
+| Prometheus    | http://localhost:9090         |
+| Grafana       | http://localhost:3000         |
 
-## 10. Evidencias que deben agregarse
+**SonarCloud:**
+https://sonarcloud.io/project/overview?id=Louima-jeff_microservicio-ep3-devops
 
-Crear una carpeta `evidencias-eft/` y guardar capturas actuales:
+**Snyk:**
+Proyecto configurado con GitHub Actions mediante `SNYK_TOKEN`. La evidencia se incluye en `README.md`, `INFORME.md` y capturas del pipeline.
 
-- repositorio GitHub;
-- ramas del repositorio;
-- pull request de `feature/evidencias-eft` a `main`;
-- GitHub Actions en verde;
-- Docker Compose levantado;
-- endpoint `/health`;
-- endpoint `/metrics`;
-- Prometheus con target `UP`;
-- Grafana con dashboard;
-- SonarCloud, Snyk, Trivy o Dependabot.
+**Acceso para revisión:**
 
-## 11. Uso de inteligencia artificial
+* GitHub: nicosingh
+* SonarCloud: [nico@singh.cl](mailto:nico@singh.cl)
+* Snyk: [nico@singh.cl](mailto:nico@singh.cl)
 
-Se utilizo IA como apoyo para ordenar redaccion, revisar estructura de documentacion y preparar una guia de presentacion. Las evidencias, validaciones y explicaciones deben ser revisadas por los integrantes antes de entregar.
+---
 
-Referencia institucional: https://bibliotecas.duoc.cl/ia
+## 10. Evidencias incluidas
 
-## 12. Conclusion personal
+La entrega incluye evidencias de:
 
-Este proyecto muestra que DevOps no es solo programar. DevOps permite ordenar el trabajo con Git, automatizar validaciones con CI/CD, ejecutar la aplicacion con Docker, revisar seguridad y observar el sistema con metricas.
+* Repositorio GitHub en rama `main`.
+* README actualizado.
+* INFORME.md.
+* GitHub Actions con jobs en verde.
+* SonarCloud con Quality Gate Passed.
+* Docker Compose funcionando.
+* Contenedores Docker activos.
+* Microservicio `/health` funcionando.
+* Endpoint `/metrics` funcionando.
+* Prometheus recolectando métricas.
+* Grafana conectado correctamente a Prometheus.
+* Dashboard Grafana con métricas reales.
+* Repositorio actualizado sin cambios pendientes.
 
-Para la presentacion final, lo mas importante es demostrar el repositorio funcionando y explicar con palabras propias cada parte del flujo.
+---
 
+## 11. Declaración de uso de IA
+
+Se utilizó apoyo de inteligencia artificial para mejorar redacción, ordenar documentación y apoyar la explicación técnica de la entrega.
+
+El uso de IA fue revisado por los integrantes y adaptado al contexto del proyecto. La responsabilidad final del contenido, configuración y evidencias corresponde al equipo.
+
+---
+
+## 12. Observación final
+
+La entrega se documenta con evidencias en `README.md`, `INFORME.md` y documento Word con capturas. El ambiente se ejecuta con Docker Compose, de acuerdo con la indicación del docente que descarta Kubernetes para esta evaluación.
+
+El pipeline CI/CD finalizó correctamente con los jobs principales en verde: `test`, `calidad`, `seguridad-dependencias`, `build-y-scan` y `deploy`.
+
+El dashboard de Grafana fue corregido y conectado a Prometheus mediante datasource provisionado, permitiendo visualizar métricas reales del microservicio.
