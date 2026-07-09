@@ -162,31 +162,26 @@ La entrega considera:
 
 ---
 
-## 10. Distribución de la presentación
+## 10. Presentación individual
 
-### Gefmy Louima
+La presentación será realizada por **Gefmy Louima**.
 
-Explica:
+Durante la presentación se explicarán los puntos principales del proyecto:
 
 - Repositorio GitHub.
-- Ramas.
+- Estrategia de ramas.
 - Pull Request.
 - GitHub Actions.
-- Pruebas.
+- Pruebas automatizadas.
 - Pipeline CI/CD.
-
-### Jean Odens Anderson
-
-Explica:
-
 - Docker.
 - Docker Compose.
-- Seguridad.
+- Seguridad con SonarCloud, Snyk y Trivy.
 - Prometheus.
 - Grafana.
-- Dashboard.
+- Dashboard de monitoreo.
 
-Aunque se divide la presentación, ambos integrantes deben conocer el proyecto completo.
+Aunque el proyecto fue desarrollado en pareja, la defensa oral será realizada de forma individual, demostrando dominio general del flujo DevOps implementado.
 
 ---
 
@@ -205,3 +200,5 @@ https://bibliotecas.duoc.cl/ia
 Este proyecto demuestra un flujo DevOps completo.
 
 Se usó GitHub para controlar versiones, GitHub Actions para automatizar, Docker para ejecutar la aplicación, herramientas de seguridad para revisar problemas y Prometheus/Grafana para monitorear el microservicio.
+
+La entrega final permite demostrar el trabajo realizado durante el semestre y explicar con palabras propias cada parte del proceso DevOps.
